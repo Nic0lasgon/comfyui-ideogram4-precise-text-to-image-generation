@@ -5,10 +5,9 @@ FROM runpod/worker-comfyui:5.8.4-base
 # pass via: docker build --build-arg HF_TOKEN=$HF_TOKEN ...
 ARG HF_TOKEN=""
 
-# update ComfyUI core to latest master (v0.24.0+) for Ideogram 4 built-in nodes
-# (DualModelGuider, CFGOverride, Ideogram4Scheduler, ComfyNumberConvert, etc.)
-# Base image has ComfyUI in detached HEAD on an old tag; must checkout master.
-RUN set -eux;     cd /comfyui;     git config --global --add safe.directory /comfyui;     git checkout master;     git pull origin master;     python -m pip install --no-cache-dir -r requirements.txt
+# replace ComfyUI with latest from git \xe2\x80\x94 base image is too old for Ideogram 4 nodes
+# (DualModelGuider, CFGOverride, Ideogram4Scheduler, etc. need v0.24.0+)
+RUN rm -rf /comfyui/.git /comfyui/comfy /comfyui/comfy_extras /comfyui/nodes.py /comfyui/requirements.txt;     git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /tmp/comfyui-latest;     cp -rf /tmp/comfyui-latest/.git /comfyui/;     cd /comfyui && git checkout HEAD -- .;     pip install --no-cache-dir -r requirements.txt;     rm -rf /tmp/comfyui-latest
 
 # install custom nodes into comfyui
 RUN comfy node install --exit-on-fail comfyui-custom-scripts --mode remote
