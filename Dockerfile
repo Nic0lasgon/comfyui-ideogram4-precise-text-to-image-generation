@@ -1,13 +1,14 @@
 # clean base image containing only comfyui, comfy-cli and comfyui-manager
 FROM runpod/worker-comfyui:5.8.4-base
 
-# build-time tokens for gated downloads â never baked into final image.
+# build-time tokens for gated downloads \xe2\x80\x94 never baked into final image.
 # pass via: docker build --build-arg HF_TOKEN=$HF_TOKEN ...
 ARG HF_TOKEN=""
 
-# update ComfyUI core â base image may lag behind required built-in nodes
+# update ComfyUI core to latest master (v0.24.0+) for Ideogram 4 built-in nodes
 # (DualModelGuider, CFGOverride, Ideogram4Scheduler, ComfyNumberConvert, etc.)
-RUN comfy update
+# Base image has ComfyUI in detached HEAD on an old tag; must checkout master.
+RUN set -eux;     cd /comfyui;     git config --global --add safe.directory /comfyui;     git checkout master;     git pull origin master;     python -m pip install --no-cache-dir -r requirements.txt
 
 # install custom nodes into comfyui
 RUN comfy node install --exit-on-fail comfyui-custom-scripts --mode remote
